@@ -195,18 +195,19 @@ DOMDisplay.prototype.scrollPlayerIntoView = function(state) {
     } else if (center.y > bottom - margin) {
         this.dom.scrollTop = center.y + margin - height;
     }
-}
+};
+
 Level.prototype.touches = function(pos, size, type) {
     var xStart = Math.floor(pos.x);
     var xEnd = Math.ceil(pos.x + size.x);
     var yStart = Math.floor(pos.y);
-    var yEnd = Math.ceil(pos.y + setTimeout.y);
+    var yEnd = Math.ceil(pos.y + size.y);
 
     for (var y = yStart; y < yEnd; y++) {
-        for (var x = xStart; x< xEnd; x++) {
+        for (var x = xStart; x < xEnd; x++) {
             let isOutside = x < 0 || x >= this.width ||
                             y < 0 || y >= this.height;
-            let here = isOutside? "wall" : this.rows[y][x];
+            let here = isOutside ? "wall" : this.rows[y][x];
             if (here == type) return true;
         }
     }
@@ -215,7 +216,7 @@ Level.prototype.touches = function(pos, size, type) {
 
 State.prototype.update = function(time, keys) {
     let actors = this.actors
-      .map( actor => actor.update(time, this, keys));
+      .map(actor => actor.update(time, this, keys));
     let newState = new State(this.level, actors, this.status);
 
     if (newState.status != "playing") return newState;
@@ -227,7 +228,7 @@ State.prototype.update = function(time, keys) {
 
     for (let actor of actors) {
         if (actor != player && overlap(actor, player)) {
-            new State = actor.collide(newState);
+            newState = actor.collide(newState);
         }
     }
     return newState;
@@ -262,18 +263,18 @@ Lava.prototype.update = function(time, state) {
     }
 };
 
-const wobbleSpeed = 8, wobbleDist = 0.07;
+var wobbleSpeed = 8, wobbleDist = 0.07;
 
 Coin.prototype.update = function(time) {
     let wobble = this.wobble + time * wobbleSpeed;
     let wobblePos = Math.sin(wobble) * wobbleDist;
     return new Coin(this.basePos.plus(new Vec(0, wobblePos)),
                     this.basePos, wobble);
-}
+};
 
-const playerXSpeed = 7;
-const gravity = 30;
-const jumpSpeed = 17;
+var playerXSpeed = 7;
+var gravity = 30;
+var jumpSpeed = 17;
 
 Player.prototype.update = function(time, state, keys) {
     let xSpeed = 0;
@@ -296,3 +297,63 @@ Player.prototype.update = function(time, state, keys) {
     }
     return new Player(pos, new Vec(xSpeed, ySpeed));
 };
+
+function trackKeys(keys) {
+    let down = Object.create(null);
+    function track(event) {
+        if (keys.includes(event.key)) {
+            down[event.key] = event.type == "keydown";
+            event.preventDefault();
+        }
+    }
+    window.addEventListener("keydown", track);
+    window.addEventListener("keyup", track);
+    return down;
+}
+
+var arrowKeys =
+  trackKeys(["ArrowLeft", "ArrowRight", "ArrowUp"]);
+
+function runAnimation(frameFunc) {
+    let lastTime = null;
+    function frame(time) {
+        if (lastTime != null) {
+            let timeStep = Math.min(time - lastTime, 100) / 1000;
+            if (frameFunc(timeStep) === false) return;
+        }
+        lastTime = time;
+        requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+}
+
+function runLevel(level, Display) {
+    let display = new Display(document.body, level);
+    let state = State.start(level);
+    let ending = 1;
+    return new Promise(resolve => {
+        runAnimation(time => {
+            state = state.update(time, arrowKeys);
+            display.syncState(state);
+            if (state.status == "playing") {
+                return true;
+            } else if (ending > 0) {
+                ending -= time;
+                return true;
+            } else {
+                display.clear();
+                resolve(state.status);
+                return false;
+            }
+        });
+    });
+}
+
+async function runGame(plans, Display) {
+    for (let level = 0; level < plans.length;) {
+        let status = await runLevel(new Level(plans[level]),
+                                     Display);
+                                     if (status == "won") level++;
+    }
+    console.log("You've won!");
+}

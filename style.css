@@ -9,11 +9,11 @@
 }
 
 .lava {
-    background: rgb(255, 100, 100);
+    background: rgb(100, 255, 108);
 }
 
 .wall {
-    background: white;
+    background: black;
 }
 
 .actor {
@@ -21,11 +21,13 @@
 }
 
 .coin {
-    background: rgb(241, 229, 89);
+    background: rgb(251, 251, 251);
 }
 
 .player {
-    background: rgb(64, 64, 64);
+    /* background: rgb(64, 64, 64); */
+    background-image: url(player.jpg);
+    background-size: cover;
 }
 
 .lost .plaxer {

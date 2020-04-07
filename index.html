@@ -1,14 +1,13 @@
-<!DOCTYPE html>
-    <title>A Simple Platform Game</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="script.js"></script>
+<!-- Run code here in the context of Chapter 16-->
+
+<!doctype html>
+<script src="script.js"></script>
+<script src="levels.js"></script>
+
+<link rel="stylesheet" href="style.css">
 
 <body>
-    <script>
-        // let simpleLevel = new Level(simpleLevelPlan);
-        let display = new DOMDisplay(document.body, simpleLevel);
-        display.syncState(State.start(simpleLevel));
-    </script>
+  <script>
+    runGame(GAME_LEVELS, DOMDisplay);
+  </script>
 </body>
-</html>
-
